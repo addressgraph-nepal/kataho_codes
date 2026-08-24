@@ -1,2 +1,6 @@
 # Plaintext geocode datasets must never be committed.
 assets/data/*.json
+
+# Generated tooling and build output.
+.dart_tool/
+build/
