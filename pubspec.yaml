@@ -1,0 +1,24 @@
+name: kataho_code
+description: Kataho Plus Code to Kataho Code package with consumer-provided key.
+publish_to: none
+version: 0.1.0
+
+environment:
+  sdk: ^3.12.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  equatable: ^2.1.0
+  encrypt: ^5.0.3
+  flutter_bloc: ^9.1.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  assets:
+    - assets/data/nepal_geocode.json.enc
+    - assets/data/geocode_words.json.enc
+    - assets/data/geocode_number_suffixes.json.enc
