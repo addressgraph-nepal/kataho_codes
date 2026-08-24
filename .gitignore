@@ -1,0 +1,2 @@
+# Plaintext geocode datasets must never be committed.
+assets/data/*.json

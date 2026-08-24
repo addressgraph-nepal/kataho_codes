@@ -84,14 +84,27 @@ class GeocodeRepository {
 
     final results = await Future.wait([
       numberForCode(numberCode),
-      wordForCode(wordCode),
+      wordForCode(wordCode.substring(0, 2)),
+      wordForCode(wordCode.substring(2)),
       suffixForCode(suffixCode),
     ]);
 
     final number = results[0] as GeocodeNumber?;
-    final word = results[1] as GeocodeWord?;
-    final suffix = results[2] as GeocodeNumberSuffix?;
-    if (number == null || word == null || suffix == null) return null;
+    final firstWord = results[1] as GeocodeWord?;
+    final secondWord = results[2] as GeocodeWord?;
+    final suffix = results[3] as GeocodeNumberSuffix?;
+    if (number == null ||
+        firstWord == null ||
+        secondWord == null ||
+        suffix == null) {
+      return null;
+    }
+
+    final word = GeocodeWord(
+      word: '${firstWord.word} ${secondWord.word}',
+      plusCode: wordCode,
+      hints: [...firstWord.hints, ...secondWord.hints],
+    );
 
     return KatahoCode(
       number: number,
@@ -101,9 +114,8 @@ class GeocodeRepository {
     );
   }
 
-  /// Strips separators and uppercases the code. The map can provide a more
-  /// precise 11-character code. Kataho uses all 11 significant characters as
-  /// three segments: 4 + 4 + 3.
+  /// Strips separators and uppercases the code. Kataho uses 11 significant
+  /// characters as four segments: 4 + 2 + 2 + 3.
   static String normalisePlusCode(String value) {
     final normalised = value.replaceAll(RegExp(r'[+\s-]'), '').toUpperCase();
     return normalised;

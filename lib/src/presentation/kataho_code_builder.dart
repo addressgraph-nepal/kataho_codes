@@ -70,6 +70,16 @@ class _KatahoCodeViewState extends State<_KatahoCodeView> {
           return widget.builder(context, code);
         }
 
+        if (state case KatahoCodeUnavailable(:final plusCode)) {
+          debugPrint('[KATAHO CODE] no mapping for plusCode: $plusCode');
+          return const Text('Kataho code unavailable');
+        }
+
+        if (state case KatahoCodeFailure(:final message)) {
+          debugPrint('[KATAHO CODE] lookup failed: $message');
+          return Text(message);
+        }
+
         return widget.placeholder;
       },
     );

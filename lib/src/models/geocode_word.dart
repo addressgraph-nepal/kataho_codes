@@ -2,8 +2,9 @@ import 'package:equatable/equatable.dart';
 
 /// One entry of `geocode_words.json`.
 ///
-/// Maps a Nepali word or phrase to a **4-character** plus code segment, e.g.
-/// `लक्ष निवास` -> `P8CF`. This is the middle segment of the full 11-character code.
+/// Maps a Nepali word or phrase to a **2-character** plus code segment, e.g.
+/// `अखण्ड` -> `2X`. Two entries are combined into the middle 4 characters of
+/// a full 11-character Kataho code.
 /// All 400 [plusCode] values are unique, so the mapping is bidirectional.
 class GeocodeWord extends Equatable {
   const GeocodeWord({
