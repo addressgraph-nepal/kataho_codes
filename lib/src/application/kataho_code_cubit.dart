@@ -2,7 +2,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:kataho_code/src/application/kataho_code_state.dart';
 import 'package:kataho_code/src/geocode_repository.dart';
 
+/// Coordinates asynchronous Plus Code lookups and exposes their state.
 class KatahoCodeCubit extends Cubit<KatahoCodeState> {
+  /// Creates a cubit backed by [repository].
   KatahoCodeCubit({required this.repository})
     : super(const KatahoCodeInitial());
 
@@ -10,6 +12,7 @@ class KatahoCodeCubit extends Cubit<KatahoCodeState> {
 
   String? _currentPlusCode;
 
+  /// Resolves [plusCode] and emits loading, success, unavailable, or failure.
   Future<void> resolve(String plusCode) async {
     final trimmed = plusCode.trim();
 
@@ -38,6 +41,7 @@ class KatahoCodeCubit extends Cubit<KatahoCodeState> {
     }
   }
 
+  /// Clears the current lookup and emits [KatahoCodeInitial].
   void clear() {
     _currentPlusCode = null;
     _safeEmit(const KatahoCodeInitial());

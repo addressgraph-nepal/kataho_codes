@@ -22,6 +22,10 @@ List<Map<String, dynamic>> _load(String file, String key) {
 }
 
 void main() {
+  const skipWithoutKey = _key == ''
+      ? 'Set KATAHO_ENCRYPTION_KEY to run encrypted asset tests.'
+      : null;
+
   test('parses every GeocodeNumber and round-trips', () {
     final raw = _load('nepal_geocode.json', 'geocode_numbers');
     final parsed = raw.map(GeocodeNumber.fromJson).toList();
@@ -34,7 +38,7 @@ void main() {
     expect(parsed.first.matches('1'), isTrue);
     expect(parsed.first.matches('01'), isTrue);
     expect(parsed.first.matches('99'), isFalse);
-  });
+  }, skip: skipWithoutKey);
 
   test('parses every GeocodeWord and round-trips', () {
     final raw = _load('geocode_words.json', 'geocode_words');
@@ -47,7 +51,7 @@ void main() {
     final first = parsed.first;
     expect(first.matches(first.word), isTrue);
     expect(first.startsWith(first.word.substring(0, 2)), isTrue);
-  });
+  }, skip: skipWithoutKey);
 
   test('parses every GeocodeNumberSuffix and round-trips', () {
     final raw = _load(
@@ -68,7 +72,7 @@ void main() {
     expect(hundred.matches('100'), isTrue, reason: 'unpadded query');
     expect(hundred.matches('0100'), isTrue);
     expect(hundred.matches('०१००'), isTrue, reason: 'devanagari query');
-  });
+  }, skip: skipWithoutKey);
 
   test('plus code segments are unique and sum to full code length', () {
     final n = _load(
@@ -89,7 +93,7 @@ void main() {
 
     final assembled = n.first.plusCode + w.first.plusCode + s.first.codes;
     expect(assembled.length, 11);
-  });
+  }, skip: skipWithoutKey);
 
   test('encrypted assets reject a wrong key', () {
     final blob = File('assets/data/nepal_geocode.json.enc').readAsBytesSync();
@@ -101,5 +105,5 @@ void main() {
       ),
       throwsA(anything),
     );
-  });
+  }, skip: skipWithoutKey);
 }

@@ -16,6 +16,7 @@ import 'package:kataho_code/src/models/geocode_word.dart';
 ///   -> "०१ अखण्ड ००००"
 /// ```
 class KatahoCode extends Equatable {
+  /// Creates a translated Kataho code from its component mappings.
   const KatahoCode({
     required this.number,
     required this.word,

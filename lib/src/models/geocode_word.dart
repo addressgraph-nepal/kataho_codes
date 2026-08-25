@@ -7,12 +7,14 @@ import 'package:equatable/equatable.dart';
 /// a full 11-character Kataho code.
 /// All 400 [plusCode] values are unique, so the mapping is bidirectional.
 class GeocodeWord extends Equatable {
+  /// Creates a word mapping.
   const GeocodeWord({
     required this.word,
     required this.plusCode,
     required this.hints,
   });
 
+  /// Creates a word mapping from a decoded dataset object.
   factory GeocodeWord.fromJson(Map<String, dynamic> json) => GeocodeWord(
     word: json['word'] as String,
     plusCode: json['plus_code'] as String,
@@ -21,18 +23,23 @@ class GeocodeWord extends Equatable {
     ),
   );
 
+  /// Nepali word or phrase displayed to the user.
   final String word;
 
+  /// Two-character Plus Code segment for this word.
   final String plusCode;
 
+  /// Alternate spellings accepted during matching.
   final List<String> hints;
 
+  /// Converts this mapping to its dataset representation.
   Map<String, dynamic> toJson() => {
     'word': word,
     'plus_code': plusCode,
     'hints': hints,
   };
 
+  /// True if [query] exactly matches the word or one of its hints.
   bool matches(String query) {
     final q = query.trim().toLowerCase();
     if (q.isEmpty) return false;

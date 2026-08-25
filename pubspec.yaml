@@ -1,7 +1,9 @@
 name: kataho_code
-description: Kataho Plus Code to Kataho Code package with consumer-provided key.
-publish_to: none
+description: Convert Nepal Plus Codes into human-readable Kataho Codes.
 version: 0.1.0
+repository: https://github.com/addressgraph-nepal/kataho_codes
+homepage: https://github.com/addressgraph-nepal/kataho_codes
+issue_tracker: https://github.com/addressgraph-nepal/kataho_codes/issues
 
 environment:
   sdk: ^3.12.2
@@ -16,6 +18,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  flutter_lints: ^6.0.0
 
 flutter:
   assets:

@@ -1,3 +1,9 @@
+/// A Flutter package for converting Nepal-focused Plus Codes into Kataho Codes.
+///
+/// Exported classes provide the geocode models, encrypted dataset repository,
+/// optional BLoC state management, and a widget for displaying a lookup.
+library;
+
 export 'src/application/kataho_code_cubit.dart';
 export 'src/application/kataho_code_state.dart';
 export 'src/geocode_cipher.dart';

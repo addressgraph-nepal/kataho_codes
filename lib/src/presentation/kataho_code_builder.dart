@@ -5,7 +5,9 @@ import 'package:kataho_code/src/application/kataho_code_state.dart';
 import 'package:kataho_code/src/geocode_repository.dart';
 import 'package:kataho_code/src/models/kataho_code.dart';
 
+/// Builds a widget from the asynchronous result of a Kataho Code lookup.
 class KatahoCodeBuilder extends StatelessWidget {
+  /// Creates a builder that resolves [plusCode] using [authKey].
   const KatahoCodeBuilder({
     super.key,
     required this.plusCode,
@@ -14,9 +16,16 @@ class KatahoCodeBuilder extends StatelessWidget {
     required this.placeholder,
   });
 
+  /// Plus Code to resolve, with or without separators.
   final String plusCode;
+
+  /// Base64-encoded key used to decrypt the package datasets.
   final String authKey;
+
+  /// Builds the successful result with the resolved [KatahoCode].
   final Widget Function(BuildContext context, KatahoCode code) builder;
+
+  /// Widget shown while the lookup is pending or has no result.
   final Widget placeholder;
 
   @override

@@ -48,7 +48,7 @@ dart run tool/encrypt_assets.dart <base64-key> build/decrypted_geocode
 ```
 
 The key is the Base64-encoded 32-byte AES key supplied to
-`GeocodeCipher(encryptionKey: ...)`.
+`GeocodeCipher(authKey: ...)`.
 
 **Pass the existing key.** Running `encrypt_assets.dart` with no argument mints
 a new key. If you ship blobs encrypted under a new key, every consumer must be

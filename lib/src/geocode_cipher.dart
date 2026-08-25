@@ -3,7 +3,12 @@ import 'dart:convert';
 import 'package:encrypt/encrypt.dart';
 import 'package:flutter/foundation.dart' hide Key;
 
+/// Decrypts the encrypted geocode datasets bundled with the package.
+///
+/// [authKey] must be a Base64-encoded 32-byte AES key. Call [init] before
+/// calling [decryptJson].
 class GeocodeCipher {
+  /// Creates a cipher using the consumer-provided [authKey].
   GeocodeCipher({required this.authKey});
 
   /// Base64-encoded 32-byte AES key supplied by the package consumer.
@@ -14,6 +19,7 @@ class GeocodeCipher {
 
   Encrypter? _encrypter;
 
+  /// Initializes the AES-GCM encrypter if it has not already been initialized.
   Future<void> init() async {
     if (_encrypter != null) return;
 
@@ -32,6 +38,9 @@ class GeocodeCipher {
     }
   }
 
+  /// Decrypts an encrypted asset and decodes its JSON object.
+  ///
+  /// The encrypted blob must start with the 12-byte initialization vector.
   Map<String, dynamic> decryptJson(Uint8List blob) {
     final encrypter = _encrypter;
     if (encrypter == null) {
@@ -57,6 +66,7 @@ class GeocodeCipher {
     return jsonDecode(plainText) as Map<String, dynamic>;
   }
 
+  /// Discards the initialized encrypter so it can be initialized again.
   Future<void> reset() async {
     _encrypter = null;
   }

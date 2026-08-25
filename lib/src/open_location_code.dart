@@ -7,7 +7,11 @@ import 'dart:math';
 ///
 /// The default output contains 11 significant characters (for example:
 /// `7MV7P8CF+X2R`).
-String plusCodeFromLatLng(double latitude, double longitude, {int codeLength = 11}) {
+String plusCodeFromLatLng(
+  double latitude,
+  double longitude, {
+  int codeLength = 11,
+}) {
   if (codeLength < 2 || (codeLength < 10 && codeLength.isOdd)) {
     throw ArgumentError('codeLength must be at least 2 and even below 10');
   }
@@ -32,16 +36,20 @@ String plusCodeFromLatLng(double latitude, double longitude, {int codeLength = 1
   }
 
   final pairPrecision = pow(base, 3).toInt();
-  final finalLatPrecision = pairPrecision * pow(gridRows, gridCodeLength).toInt();
-  final finalLngPrecision = pairPrecision * pow(gridColumns, gridCodeLength).toInt();
+  final finalLatPrecision =
+      pairPrecision * pow(gridRows, gridCodeLength).toInt();
+  final finalLngPrecision =
+      pairPrecision * pow(gridColumns, gridCodeLength).toInt();
 
   // Latitude 90 must be moved slightly inward so the result can be decoded.
   if (latitude == 90.0) {
     latitude -= 1 / finalLatPrecision;
   }
 
-  var latValue = ((latitude + latitudeMax) * finalLatPrecision * 1e6).round() ~/ 1e6;
-  var lngValue = ((longitude + longitudeMax) * finalLngPrecision * 1e6).round() ~/ 1e6;
+  var latValue =
+      ((latitude + latitudeMax) * finalLatPrecision * 1e6).round() ~/ 1e6;
+  var lngValue =
+      ((longitude + longitudeMax) * finalLngPrecision * 1e6).round() ~/ 1e6;
   var code = '';
 
   if (codeLength > pairCodeLength) {
@@ -64,7 +72,8 @@ String plusCodeFromLatLng(double latitude, double longitude, {int codeLength = 1
     lngValue ~/= base;
   }
 
-  code = '${code.substring(0, separatorPosition)}+${code.substring(separatorPosition)}';
+  code =
+      '${code.substring(0, separatorPosition)}+${code.substring(separatorPosition)}';
 
   if (codeLength >= separatorPosition) {
     return code.substring(0, codeLength + 1);

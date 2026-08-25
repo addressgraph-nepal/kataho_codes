@@ -1,12 +1,16 @@
+import 'dart:io';
+
 import 'package:encrypt/encrypt.dart';
 
 void main() {
   final key = Key.fromSecureRandom(32);
 
-  print('KATAHO_AUTH_KEY=${key.base64}');
-  print('');
-  print('Run the app with:');
-  print('flutter run --dart-define=KATAHO_AUTH_KEY=${key.base64}');
-  print('');
-  print('Keep this key private. Anyone with it can decrypt the datasets.');
+  stdout.writeln('KATAHO_AUTH_KEY=${key.base64}');
+  stdout.writeln();
+  stdout.writeln('Run the app with:');
+  stdout.writeln('flutter run --dart-define=KATAHO_AUTH_KEY=${key.base64}');
+  stdout.writeln();
+  stdout.writeln(
+    'Keep this key private. Anyone with it can decrypt the datasets.',
+  );
 }

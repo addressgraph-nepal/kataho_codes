@@ -19,6 +19,10 @@ List<Map<String, dynamic>> _load(String file, String key) {
 }
 
 void main() {
+  const skipWithoutKey = _key == ''
+      ? 'Set KATAHO_ENCRYPTION_KEY to run encrypted asset tests.'
+      : null;
+
   group('normalisePlusCode', () {
     test('strips separators and uppercases', () {
       expect(GeocodeRepository.normalisePlusCode('7mv7+p8c'), '7MV7P8C');
@@ -103,6 +107,6 @@ void main() {
         plusCode: 'IGNORED12',
       );
       expect(code.display, endsWith('१२३४'));
-    });
-  });
+    }, skip: skipWithoutKey);
+  }, skip: skipWithoutKey);
 }

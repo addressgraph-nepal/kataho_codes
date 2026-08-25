@@ -1,12 +1,15 @@
 import 'package:equatable/equatable.dart';
 
+/// A region-number mapping loaded from the geocode dataset.
 class GeocodeNumber extends Equatable {
+  /// Creates a region-number mapping.
   const GeocodeNumber({
     required this.number,
     required this.plusCode,
     required this.hints,
   });
 
+  /// Creates a mapping from a decoded dataset object.
   factory GeocodeNumber.fromJson(Map<String, dynamic> json) => GeocodeNumber(
     number: json['number'] as String,
     plusCode: json['plus_code'] as String,
@@ -24,6 +27,7 @@ class GeocodeNumber extends Equatable {
   /// Alternate spellings used for search/matching, e.g. `["1", "01"]`.
   final List<String> hints;
 
+  /// Converts this mapping to its dataset representation.
   Map<String, dynamic> toJson() => {
     'number': number,
     'plus_code': plusCode,

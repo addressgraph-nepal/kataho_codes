@@ -5,7 +5,9 @@ import 'package:kataho_code/src/models/geocode_number_suffix.dart';
 import 'package:kataho_code/src/models/geocode_word.dart';
 import 'package:kataho_code/src/models/kataho_code.dart';
 
+/// Loads and resolves the encrypted geocode datasets bundled with the package.
 class GeocodeRepository {
+  /// Creates a repository using the Base64-encoded AES [authKey].
   GeocodeRepository({required String authKey})
     : _cipher = GeocodeCipher(authKey: authKey);
 
@@ -18,10 +20,16 @@ class GeocodeRepository {
   static const _suffixesAsset =
       'packages/kataho_code/assets/data/geocode_number_suffixes.json.enc';
 
+  /// Number of characters in the region segment.
   static const int numberCodeLength = 4;
+
+  /// Number of characters in the combined word segment.
   static const int wordCodeLength = 4;
+
+  /// Number of characters in the suffix segment.
   static const int suffixCodeLength = 3;
 
+  /// Number of significant characters in a full Kataho lookup code.
   static const int fullCodeLength =
       numberCodeLength + wordCodeLength + suffixCodeLength;
 
@@ -33,18 +41,21 @@ class GeocodeRepository {
   Map<String, GeocodeWord>? _wordsByCode;
   Map<String, GeocodeNumberSuffix>? _suffixesByCode;
 
+  /// Returns the region-number dataset, loading and caching it on first use.
   Future<List<GeocodeNumber>> numbers() async => _numbers ??= await _load(
     _numbersAsset,
     'geocode_numbers',
     GeocodeNumber.fromJson,
   );
 
+  /// Returns the word dataset, loading and caching it on first use.
   Future<List<GeocodeWord>> words() async => _words ??= await _load(
     _wordsAsset,
     'geocode_words',
     GeocodeWord.fromJson,
   );
 
+  /// Returns the number-suffix dataset, loading and caching it on first use.
   Future<List<GeocodeNumberSuffix>> suffixes() async =>
       _suffixes ??= await _load(
         _suffixesAsset,
@@ -52,25 +63,30 @@ class GeocodeRepository {
         GeocodeNumberSuffix.fromJson,
       );
 
+  /// Loads all three datasets before returning.
   Future<void> preload() async {
     await Future.wait([numbers(), words(), suffixes()]);
   }
 
+  /// Finds a region number by its Plus Code segment.
   Future<GeocodeNumber?> numberForCode(String code) async {
     _numbersByCode ??= {for (final e in await numbers()) e.plusCode: e};
     return _numbersByCode![code.toUpperCase()];
   }
 
+  /// Finds a word by its two-character Plus Code segment.
   Future<GeocodeWord?> wordForCode(String code) async {
     _wordsByCode ??= {for (final e in await words()) e.plusCode: e};
     return _wordsByCode![code.toUpperCase()];
   }
 
+  /// Finds a suffix by its Plus Code segment.
   Future<GeocodeNumberSuffix?> suffixForCode(String code) async {
     _suffixesByCode ??= {for (final e in await suffixes()) e.codes: e};
     return _suffixesByCode![code.toUpperCase()];
   }
 
+  /// Resolves [plusCode] to a Kataho code, or returns `null` if unmapped.
   Future<KatahoCode?> katahoCodeFor(String plusCode) async {
     final normalised = normalisePlusCode(plusCode);
     if (normalised.length != fullCodeLength) return null;
@@ -114,8 +130,8 @@ class GeocodeRepository {
     );
   }
 
-  /// Strips separators and uppercases the code. Kataho uses 11 significant
-  /// characters as four segments: 4 + 2 + 2 + 3.
+  /// Removes separators and whitespace and converts a Plus Code to uppercase.
+  /// Kataho uses 11 significant characters as four segments: 4 + 2 + 2 + 3.
   static String normalisePlusCode(String value) {
     final normalised = value.replaceAll(RegExp(r'[+\s-]'), '').toUpperCase();
     return normalised;

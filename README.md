@@ -1,64 +1,74 @@
 # kataho_code
 
-Flutter package for converting 11-character Plus Codes into Kataho Codes. The
-package owns the geocode models, encrypted datasets, repository, cubit, and UI
-builder.
+Flutter package for converting Nepal-focused 11-character Plus Codes into
+human-readable Kataho Codes.
 
-## Required encryption key
+The package includes encrypted geocode datasets, model classes, an async
+repository, a `KatahoCodeCubit`, and a ready-to-use `KatahoCodeBuilder`.
 
-**The package does not contain the decryption key. Every package consumer must
-provide the Base64-encoded 32-byte AES key as the required `authKey` argument.**
+## Installation
 
-For the example app, provide it at build/run time:
+```yaml
+dependencies:
+  kataho_code: ^0.1.0
+```
+
+Then run `flutter pub get`.
+
+## Encryption key
+
+The package does not contain the AES key. Every consumer must provide the
+Base64-encoded 32-byte key that matches the encrypted datasets. Keep this key
+in a secret build configuration and never commit it to source control.
+
+For example:
 
 ```bash
 flutter run --dart-define=KATAHO_AUTH_KEY=<base64-aes-key>
 ```
 
-Example usage:
+## Widget usage
 
 ```dart
 KatahoCodeBuilder(
-  authKey: '<admin-generated-key>',
+  authKey: const String.fromEnvironment('KATAHO_AUTH_KEY'),
   plusCode: '7MV7P8CF+J68',
   builder: (context, code) => Text(code.display),
   placeholder: const Text('Loading...'),
 )
 ```
 
-Never commit the real key to the public repository.
+A matching dataset entry resolves to a display value such as
+`०९ लक्ष निवास १८३८`.
 
-As the dataset administrator, generate a key once with:
+## Repository usage
 
-```bash
-dart run tool/generate_key.dart
+Use `GeocodeRepository` directly when the application owns loading and state:
+
+```dart
+final repository = GeocodeRepository(
+  authKey: const String.fromEnvironment('KATAHO_AUTH_KEY'),
+);
+
+final result = await repository.katahoCodeFor('7MV7P8CF+J68');
+print(result?.display);
 ```
 
-Store the generated key in your password manager or secret vault. Give the
-same key privately only to authorized users of this package. Do not commit it
-to the public GitHub repository.
+Call `await repository.preload()` during startup to decrypt and cache all
+datasets before the first lookup.
 
-The encrypted datasets must be created with this same key. If you rotate the
-key, re-encrypt the datasets and distribute the replacement key to users.
+## Input format
 
-The app currently uses this package through a local path dependency:
+Inputs may contain the standard Plus Code separator, spaces, or hyphens. The
+repository normalizes them before lookup and expects 11 significant
+characters. A lookup returns `null` for invalid input or an unmapped code.
 
-```yaml
-kataho_code:
-  path: packages/kataho_code
-```
+## Data tooling
 
-When the package is moved to a private GitHub repository, replace it with:
+The scripts in `tool/` are for dataset administrators who have the encryption
+key. See [tool/README.md](tool/README.md) before decrypting or re-encrypting
+the assets.
 
-```yaml
-kataho_code:
-  git:
-    url: git@github.com:<organization>/<private-repository>.git
-    ref: main
-```
+## License
 
-The package expects Plus Codes in the `4 + 4 + 3` format, for example
-`7MV7P8CF+J68`, and resolves them as `०९ लक्ष निवास १८३८` when the datasets
-contain the corresponding entries.
-# kataho_codes
-# kataho_codes
+MIT. See [LICENSE](LICENSE).
