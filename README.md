@@ -10,7 +10,7 @@ repository, a `KatahoCodeCubit`, and a ready-to-use `KatahoCodeBuilder`.
 
 ```yaml
 dependencies:
-  kataho_code: ^0.1.0
+  kataho_code: ^0.1.1
 ```
 
 Then run `flutter pub get`.
