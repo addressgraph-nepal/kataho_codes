@@ -30,6 +30,7 @@ class _KatahoExamplePageState extends State<KatahoExamplePage> {
 
   final _controller = TextEditingController(text: '27.7172, 85.3240');
   String? _input;
+  KatahoCodeType? _output;
 
   @override
   void dispose() {
@@ -88,15 +89,61 @@ class _KatahoExamplePageState extends State<KatahoExamplePage> {
               ],
             ),
             const SizedBox(height: 16),
+            Text('Convert to', style: theme.textTheme.labelLarge),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              children: [
+                ChoiceChip(
+                  label: const Text('Everything'),
+                  selected: _output == null,
+                  onSelected: (_) => setState(() => _output = null),
+                ),
+                for (final type in KatahoCodeType.values)
+                  ChoiceChip(
+                    label: Text(_label(type)),
+                    selected: _output == type,
+                    onSelected: (_) => setState(() => _output = type),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 16),
             FilledButton(onPressed: _submit, child: const Text('Convert')),
             if (_input != null) ...[
               const SizedBox(height: 24),
-              KatahoCodeBuilder(
-                input: _input,
-                authKey: _authKey,
-                placeholder: const Center(child: CircularProgressIndicator()),
-                builder: (context, code) => _ResultCard(code: code),
-              ),
+              if (_output == null)
+                KatahoCodeBuilder(
+                  input: _input,
+                  authKey: _authKey,
+                  placeholder: const Center(child: CircularProgressIndicator()),
+                  builder: (context, code) => _ResultCard(code: code),
+                )
+              else
+                // Ask for one representation and show just that.
+                KatahoCodeBuilder(
+                  input: _input,
+                  output: _output,
+                  authKey: _authKey,
+                  placeholder: const Center(child: CircularProgressIndicator()),
+                  outputBuilder: (context, code, value) => Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _label(_output!),
+                            style: theme.textTheme.labelMedium,
+                          ),
+                          SelectableText(
+                            value ?? 'unavailable',
+                            style: theme.textTheme.headlineSmall,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
             ],
           ],
         ),
@@ -104,6 +151,14 @@ class _KatahoExamplePageState extends State<KatahoExamplePage> {
     );
   }
 }
+
+String _label(KatahoCodeType type) => switch (type) {
+  KatahoCodeType.latLng => 'Coordinates',
+  KatahoCodeType.plusCode => 'Plus Code',
+  KatahoCodeType.katahoCode => 'Kataho Code',
+  KatahoCodeType.katahoCodeLatin => 'Kataho (Latin)',
+  KatahoCodeType.kid => 'KID',
+};
 
 class _ResultCard extends StatelessWidget {
   const _ResultCard({required this.code});

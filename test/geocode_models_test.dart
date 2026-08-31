@@ -46,7 +46,9 @@ void main() {
     expect(parsed, hasLength(400));
     for (var i = 0; i < raw.length; i++) {
       expect(parsed[i].toJson(), equals(raw[i]));
-      expect(parsed[i].plusCode.length, 4);
+      // Each entry holds one half of the middle segment; two are combined
+      // into the 4 characters of a full code.
+      expect(parsed[i].plusCode.length, 2);
     }
     final first = parsed.first;
     expect(first.matches(first.word), isTrue);
@@ -91,7 +93,12 @@ void main() {
     expect(w.map((e) => e.plusCode).toSet(), hasLength(400));
     expect(s.map((e) => e.codes).toSet(), hasLength(8000));
 
-    final assembled = n.first.plusCode + w.first.plusCode + s.first.codes;
+    // A full code takes two word entries: 4 + 2 + 2 + 3.
+    final assembled =
+        n.first.plusCode +
+        w.first.plusCode +
+        w.last.plusCode +
+        s.first.codes;
     expect(assembled.length, 11);
   }, skip: skipWithoutKey);
 

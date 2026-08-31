@@ -1,3 +1,19 @@
+## 0.4.0
+
+Callers can now ask for a specific output representation instead of reading it
+off the result.
+
+* Added the `KatahoCodeType` enum: `latLng`, `plusCode`, `katahoCode`,
+  `katahoCodeLatin`, and `kid`.
+* Added `KatahoCode.valueFor(type)`, returning that representation as a
+  `String`.
+* Added `GeocodeRepository.convert(input, output)`, going straight from any
+  input form to any output form.
+* `KatahoCodeBuilder` accepts `output` with a new `outputBuilder`, which
+  receives the requested value alongside the full `KatahoCode`. The existing
+  `builder` is unchanged, so current call sites keep working; supply exactly
+  one of the two.
+
 ## 0.3.0
 
 Added the KID — a 12-digit, separator-free form of a Kataho Code. Coordinates,

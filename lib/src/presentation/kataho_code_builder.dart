@@ -4,6 +4,7 @@ import 'package:kataho_code/src/application/kataho_code_cubit.dart';
 import 'package:kataho_code/src/application/kataho_code_state.dart';
 import 'package:kataho_code/src/geocode_repository.dart';
 import 'package:kataho_code/src/models/kataho_code.dart';
+import 'package:kataho_code/src/models/kataho_code_type.dart';
 import 'package:kataho_code/src/open_location_code.dart';
 
 /// Builds a widget from the asynchronous result of a Kataho Code lookup.
@@ -14,6 +15,9 @@ class KatahoCodeBuilder extends StatelessWidget {
   /// Provide exactly one input: [plusCode], [katahoCode], [kid], [input], or
   /// both [latitude] and [longitude]. Whichever is given is resolved to the
   /// same [KatahoCode], which carries all four representations.
+  ///
+  /// To ask for one specific representation, set [output] and supply
+  /// [outputBuilder] instead of [builder].
   const KatahoCodeBuilder({
     super.key,
     this.plusCode,
@@ -22,10 +26,20 @@ class KatahoCodeBuilder extends StatelessWidget {
     this.input,
     this.latitude,
     this.longitude,
+    this.output,
+    this.builder,
+    this.outputBuilder,
     required this.authKey,
-    required this.builder,
     required this.placeholder,
   }) : assert(
+         (builder != null) ^ (outputBuilder != null),
+         'Provide exactly one of builder or outputBuilder.',
+       ),
+       assert(
+         outputBuilder == null || output != null,
+         'outputBuilder needs an output type to build.',
+       ),
+       assert(
          (plusCode != null ? 1 : 0) +
                  (katahoCode != null ? 1 : 0) +
                  (kid != null ? 1 : 0) +
@@ -64,8 +78,22 @@ class KatahoCodeBuilder extends StatelessWidget {
   /// Base64-encoded key used to decrypt the package datasets.
   final String authKey;
 
+  /// The representation [outputBuilder] receives. Required by, and only used
+  /// with, [outputBuilder].
+  final KatahoCodeType? output;
+
   /// Builds the successful result with the resolved [KatahoCode].
-  final Widget Function(BuildContext context, KatahoCode code) builder;
+  ///
+  /// Mutually exclusive with [outputBuilder].
+  final Widget Function(BuildContext context, KatahoCode code)? builder;
+
+  /// Builds the successful result with the resolved [KatahoCode] and its
+  /// [output] representation, e.g. the KID as a `String`.
+  ///
+  /// `value` is null only when the requested representation is unavailable,
+  /// which for a resolved code cannot happen.
+  final Widget Function(BuildContext context, KatahoCode code, String? value)?
+  outputBuilder;
 
   /// Widget shown while the lookup is pending or has no result.
   final Widget placeholder;
@@ -85,7 +113,9 @@ class KatahoCodeBuilder extends StatelessWidget {
             ..resolve(resolvedInput),
       child: _KatahoCodeView(
         input: resolvedInput,
+        output: output,
         builder: builder,
+        outputBuilder: outputBuilder,
         placeholder: placeholder,
       ),
     );
@@ -95,12 +125,17 @@ class KatahoCodeBuilder extends StatelessWidget {
 class _KatahoCodeView extends StatefulWidget {
   const _KatahoCodeView({
     required this.input,
+    required this.output,
     required this.builder,
+    required this.outputBuilder,
     required this.placeholder,
   });
 
   final String input;
-  final Widget Function(BuildContext context, KatahoCode code) builder;
+  final KatahoCodeType? output;
+  final Widget Function(BuildContext context, KatahoCode code)? builder;
+  final Widget Function(BuildContext context, KatahoCode code, String? value)?
+  outputBuilder;
   final Widget placeholder;
 
   @override
@@ -125,7 +160,13 @@ class _KatahoCodeViewState extends State<_KatahoCodeView> {
             '[KATAHO CODE] plusCode: ${code.plusCode}, '
             'katahoCode: ${code.display}',
           );
-          return widget.builder(context, code);
+          final build = widget.builder;
+          if (build != null) return build(context, code);
+          return widget.outputBuilder!(
+            context,
+            code,
+            code.valueFor(widget.output!),
+          );
         }
 
         if (state case KatahoCodeUnavailable(:final input)) {

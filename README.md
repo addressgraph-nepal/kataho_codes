@@ -18,7 +18,7 @@ encrypted geocode datasets, model classes, an async repository, a
 
 ```yaml
 dependencies:
-  kataho_code: ^0.3.0
+  kataho_code: ^0.4.0
 ```
 
 Then run `flutter pub get`.
@@ -86,6 +86,25 @@ KatahoCodeBuilder(
 Provide exactly one of `plusCode`, `katahoCode`, `kid`, `input`, or
 `latitude` + `longitude`.
 
+### Asking for one representation
+
+Set `output` and use `outputBuilder` when you want a specific form rather than
+the whole result:
+
+```dart
+KatahoCodeBuilder(
+  input: userText,
+  output: KatahoCodeType.kid,
+  authKey: const String.fromEnvironment('KATAHO_AUTH_KEY'),
+  outputBuilder: (context, code, value) => Text(value ?? '—'),
+  placeholder: const Text('Loading...'),
+)
+```
+
+`outputBuilder` still receives the full `KatahoCode`, so the other forms stay
+available. `KatahoCodeType` has `latLng`, `plusCode`, `katahoCode`,
+`katahoCodeLatin`, and `kid`.
+
 ## The result
 
 Every lookup returns a `KatahoCode` carrying all four representations, so one
@@ -119,6 +138,23 @@ await repository.resolve('7MW4JQF6+62R');        // Plus Code
 await repository.resolve('१९ माणिक प्रकाश ००७५');  // Kataho Code
 await repository.resolve('192451960075');        // KID
 await repository.resolve('27.7172, 85.3240');    // coordinates
+```
+
+To go straight from any input to one specific output, use `convert`:
+
+```dart
+await repository.convert(userText, KatahoCodeType.kid);
+// '192451960075'
+
+await repository.convert('192451960075', KatahoCodeType.latLng);
+// '27.717200, 85.324000'
+```
+
+Or read any form off a resolved code with `valueFor`:
+
+```dart
+final code = await repository.resolve(userText);
+code?.valueFor(KatahoCodeType.plusCode); // '7MW4JQF6+62R'
 ```
 
 Or call a direction explicitly:

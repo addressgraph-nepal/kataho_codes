@@ -138,6 +138,65 @@ void main() {
     expect(await repo.katahoCodeForKid('abcdefghijkl'), isNull);
   });
 
+  test('valueFor returns each representation', () async {
+    final c = (await repo.resolve('092942121838'))!;
+    expect(c.valueFor(KatahoCodeType.kid), '092942121838');
+    expect(c.valueFor(KatahoCodeType.plusCode), '7MV7P88F+VJC');
+    expect(c.valueFor(KatahoCodeType.katahoCode), '०९ लक्ष निवास १८३८');
+    expect(c.valueFor(KatahoCodeType.katahoCodeLatin), '09 लक्ष निवास 1838');
+    expect(c.valueFor(KatahoCodeType.latLng), startsWith('27.717'));
+  });
+
+  test('convert goes from any input to any output', () async {
+    // Every input form, asked for every output form.
+    const inputs = [
+      '7MV7P88F+VJC',
+      '०९ लक्ष निवास १८३८',
+      '092942121838',
+      '27.7172, 85.3240',
+    ];
+    for (final input in inputs) {
+      expect(
+        await repo.convert(input, KatahoCodeType.kid),
+        '092942121838',
+        reason: input,
+      );
+      expect(
+        await repo.convert(input, KatahoCodeType.plusCode),
+        '7MV7P88F+VJC',
+        reason: input,
+      );
+      expect(
+        await repo.convert(input, KatahoCodeType.katahoCode),
+        '०९ लक्ष निवास १८३८',
+        reason: input,
+      );
+      expect(
+        await repo.convert(input, KatahoCodeType.latLng),
+        startsWith('27.717'),
+        reason: input,
+      );
+    }
+  });
+
+  test('convert returns null for unresolvable input', () async {
+    expect(await repo.convert('nope', KatahoCodeType.kid), isNull);
+  });
+
+  test('valueFor returns null for values a bare code lacks', () async {
+    const bare = KatahoCode(
+      number: GeocodeNumber(number: '09', plusCode: '7MV7', hints: []),
+      word: GeocodeWord(word: 'लक्ष निवास', plusCode: 'P88F', hints: []),
+      suffix: GeocodeNumberSuffix(codes: 'VJC', numbers: '1838', anka: '१८३८'),
+      plusCode: '7MV7P88FVJC',
+    );
+    expect(bare.valueFor(KatahoCodeType.kid), isNull);
+    expect(bare.valueFor(KatahoCodeType.latLng), isNull);
+    // These need no lookup, so they are always available.
+    expect(bare.valueFor(KatahoCodeType.plusCode), '7MV7P88F+VJC');
+    expect(bare.valueFor(KatahoCodeType.katahoCode), '०९ लक्ष निवास १८३८');
+  });
+
   test('unmapped and malformed input returns null', () async {
     expect(await repo.resolve('99 nope nope 9999'), isNull);
     expect(await repo.resolve(''), isNull);

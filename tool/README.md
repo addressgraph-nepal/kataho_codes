@@ -1,6 +1,6 @@
 # Encrypted geocode assets
 
-The three geocode JSON files ship as AES-256-GCM blobs instead of plaintext.
+The four geocode JSON files ship as AES-256-GCM blobs instead of plaintext.
 
 ## What this does and does not protect against
 
@@ -31,7 +31,13 @@ work never re-encrypts anything. `assets/data/` contains only:
 nepal_geocode.json.enc
 geocode_words.json.enc
 geocode_number_suffixes.json.enc
+geocode_word_kids.json.enc
 ```
+
+`encrypt_assets.dart` generates a **new** key when run without one, which
+would invalidate every existing blob. To add or re-encrypt a single dataset
+against the current key, use a targeted script such as
+`encrypt_word_kids.dart` instead.
 
 ### If the data ever does need to change
 

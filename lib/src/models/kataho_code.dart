@@ -2,6 +2,7 @@ import 'package:equatable/equatable.dart';
 import 'package:kataho_code/src/models/geocode_number.dart';
 import 'package:kataho_code/src/models/geocode_number_suffix.dart';
 import 'package:kataho_code/src/models/geocode_word.dart';
+import 'package:kataho_code/src/models/kataho_code_type.dart';
 
 /// A plus code translated into its human-readable Kataho form.
 ///
@@ -80,6 +81,22 @@ class KatahoCode extends Equatable {
   /// e.g. `"7MRC-2X-X2R"`. Useful for debugging a bad lookup.
   String get segmentedPlusCode =>
       '${number.plusCode}-${word.plusCode}-${suffix.codes}';
+
+  /// Returns this code in the representation [type] names.
+  ///
+  /// Returns `null` only when the underlying value is missing — [kid] and the
+  /// coordinates are absent when a [KatahoCode] is constructed directly
+  /// rather than resolved through a repository.
+  String? valueFor(KatahoCodeType type) => switch (type) {
+    KatahoCodeType.latLng => latitude == null || longitude == null
+        ? null
+        : '${latitude!.toStringAsFixed(6)}, '
+              '${longitude!.toStringAsFixed(6)}',
+    KatahoCodeType.plusCode => formattedPlusCode,
+    KatahoCodeType.katahoCode => display,
+    KatahoCodeType.katahoCodeLatin => displayLatin,
+    KatahoCodeType.kid => kid,
+  };
 
   static const _devanagariDigits = '०१२३४५६७८९';
 

@@ -5,6 +5,7 @@ import 'package:kataho_code/src/models/geocode_number_suffix.dart';
 import 'package:kataho_code/src/models/geocode_word.dart';
 import 'package:kataho_code/src/models/geocode_word_kid.dart';
 import 'package:kataho_code/src/models/kataho_code.dart';
+import 'package:kataho_code/src/models/kataho_code_type.dart';
 import 'package:kataho_code/src/open_location_code.dart';
 
 /// Loads and resolves the encrypted geocode datasets bundled with the package.
@@ -293,6 +294,16 @@ class GeocodeRepository {
   }
 
   static final _plusCodeAlphabet = RegExp(r'^[23456789CFGHJMPQRVWX]+$');
+
+  /// Resolves [input] and returns just the representation [output] names.
+  ///
+  /// A shortcut for `(await resolve(input))?.valueFor(output)`, for callers
+  /// that want one specific conversion — say a KID from whatever the user
+  /// typed — rather than the whole [KatahoCode].
+  Future<String?> convert(String input, KatahoCodeType output) async {
+    final code = await resolve(input);
+    return code?.valueFor(output);
+  }
 
   /// Parses `"lat,lng"` or `"lat lng"`, or returns `null` if [value] is not a
   /// coordinate pair.

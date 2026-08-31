@@ -59,9 +59,18 @@ void main() {
       final number = _load('nepal_geocode.json', 'geocode_numbers')
           .map(GeocodeNumber.fromJson)
           .firstWhere((entry) => entry.plusCode == '7MV7');
-      final word = _load('geocode_words.json', 'geocode_words')
-          .map(GeocodeWord.fromJson)
-          .firstWhere((entry) => entry.plusCode == 'P8CF');
+      // The middle segment P8CF is two entries, P8 and CF.
+      final words = _load(
+        'geocode_words.json',
+        'geocode_words',
+      ).map(GeocodeWord.fromJson).toList();
+      final firstWord = words.firstWhere((e) => e.plusCode == 'P8');
+      final secondWord = words.firstWhere((e) => e.plusCode == 'CF');
+      final word = GeocodeWord(
+        word: '${firstWord.word} ${secondWord.word}',
+        plusCode: firstWord.plusCode + secondWord.plusCode,
+        hints: [...firstWord.hints, ...secondWord.hints],
+      );
       final suffix =
           _load('geocode_number_suffixes.json', 'geocode_number_suffixes')
               .map(GeocodeNumberSuffix.fromJson)
@@ -78,20 +87,26 @@ void main() {
     });
 
     test('assembles the devanagari display form', () {
+      // A real middle segment is two word entries combined.
+      final combined = GeocodeWord(
+        word: '${word.word} ${word.word}',
+        plusCode: word.plusCode + word.plusCode,
+        hints: word.hints,
+      );
       final code = KatahoCode(
         number: number,
-        word: word,
+        word: combined,
         suffix: suffix,
-        plusCode: number.plusCode + word.plusCode + suffix.codes,
+        plusCode: number.plusCode + combined.plusCode + suffix.codes,
       );
 
       expect(code.display, contains(word.word));
       expect(code.displayLatin, contains(word.word));
       expect(
         code.segmentedPlusCode,
-        '${number.plusCode}-${word.plusCode}-${suffix.codes}',
+        '${number.plusCode}-${combined.plusCode}-${suffix.codes}',
       );
-      expect(code.plusCode, number.plusCode + word.plusCode + suffix.codes);
+      expect(code.plusCode, number.plusCode + combined.plusCode + suffix.codes);
       expect(code.plusCode.length, 11);
     });
 
