@@ -24,6 +24,7 @@ class KatahoCode extends Equatable {
     required this.plusCode,
     this.latitude,
     this.longitude,
+    this.kid,
   });
 
   /// Leading region segment, e.g. `01`.
@@ -50,6 +51,12 @@ class KatahoCode extends Equatable {
   /// Populated for every code the repository resolves. It is `null` only when
   /// a [KatahoCode] is constructed directly without coordinates.
   final double? longitude;
+
+  /// The 12-digit KID, e.g. `"192451960075"`.
+  ///
+  /// Populated for every code the repository resolves. It is `null` only when
+  /// a [KatahoCode] is constructed directly without one.
+  final String? kid;
 
   /// The plus code in its canonical separated form, e.g. `"7MV7P8CF+J68"`.
   String get formattedPlusCode => plusCode.length > 8
@@ -94,6 +101,7 @@ class KatahoCode extends Equatable {
     plusCode,
     latitude,
     longitude,
+    kid,
   ];
 
   @override

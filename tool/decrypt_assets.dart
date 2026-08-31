@@ -17,6 +17,7 @@ const _targets = <String, String>{
   'assets/data/geocode_words.json.enc': 'geocode_words.json',
   'assets/data/geocode_number_suffixes.json.enc':
       'geocode_number_suffixes.json',
+  'assets/data/geocode_word_kids.json.enc': 'geocode_word_kids.json',
 };
 
 const _ivLength = 12;

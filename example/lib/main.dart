@@ -55,8 +55,8 @@ class _KatahoExamplePageState extends State<KatahoExamplePage> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'Enter coordinates, a Plus Code, or a Kataho Code — the package '
-              'detects which and converts between all three.',
+              'Enter coordinates, a Plus Code, a Kataho Code, or a KID — the '
+              'package detects which and converts between all four.',
               style: theme.textTheme.bodyMedium,
             ),
             const SizedBox(height: 16),
@@ -64,7 +64,7 @@ class _KatahoExamplePageState extends State<KatahoExamplePage> {
               controller: _controller,
               onSubmitted: (_) => _submit(),
               decoration: const InputDecoration(
-                labelText: 'Coordinates, Plus Code, or Kataho Code',
+                labelText: 'Coordinates, Plus Code, Kataho Code, or KID',
                 border: OutlineInputBorder(),
               ),
             ),
@@ -74,8 +74,9 @@ class _KatahoExamplePageState extends State<KatahoExamplePage> {
               children: [
                 for (final sample in const [
                   '27.7172, 85.3240',
-                  '7MV7P8CF+J68',
-                  '०९ लक्ष निवास १८३८',
+                  '7MW4JQF6+62R',
+                  '१९ माणिक प्रकाश ००७५',
+                  '192451960075',
                 ])
                   ActionChip(
                     label: Text(sample),
@@ -124,6 +125,7 @@ class _ResultCard extends StatelessWidget {
             const Divider(height: 24),
             _Row(label: 'Latin', value: code.displayLatin),
             _Row(label: 'Plus Code', value: code.formattedPlusCode),
+            if (code.kid != null) _Row(label: 'KID', value: code.kid!),
             if (code.latitude != null && code.longitude != null)
               _Row(
                 label: 'Coordinates',

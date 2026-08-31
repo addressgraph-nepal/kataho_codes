@@ -16,6 +16,12 @@ class _FakeRepo extends GeocodeRepository {
     GeocodeWord(word: 'निवास२', plusCode: 'CF', hints: ['niwas2']),
     GeocodeWord(word: 'अखण्ड', plusCode: '2X', hints: ['akhanda']),
   ];
+  static const _wordKids = [
+    GeocodeWordKid(plusCode: 'P8', kid: '294'),
+    GeocodeWordKid(plusCode: '8F', kid: '212'),
+    GeocodeWordKid(plusCode: 'CF', kid: '171'),
+    GeocodeWordKid(plusCode: '2X', kid: '001'),
+  ];
   static const _suffixes = [
     GeocodeNumberSuffix(codes: 'VJC', numbers: '1838', anka: '१८३८'),
     GeocodeNumberSuffix(codes: 'X2R', numbers: '0000', anka: '००००'),
@@ -27,6 +33,8 @@ class _FakeRepo extends GeocodeRepository {
   Future<List<GeocodeWord>> words() async => _words;
   @override
   Future<List<GeocodeNumberSuffix>> suffixes() async => _suffixes;
+  @override
+  Future<List<GeocodeWordKid>> wordKids() async => _wordKids;
 }
 
 void main() {
@@ -79,6 +87,55 @@ void main() {
     final b = (await repo.katahoCodeForLatLng(a.latitude!, a.longitude!))!;
     expect(b.display, a.display);
     expect(b.plusCode, a.plusCode);
+  });
+
+  test('every lookup carries the KID', () async {
+    final c = (await repo.resolve('7MV7P88F+VJC'))!;
+    // 09 + P8->294 + 8F->212 + 1838
+    expect(c.kid, '092942121838');
+    expect(c.kid!.length, 12);
+  });
+
+  test('kid -> everything else', () async {
+    final c = (await repo.resolve('092942121838'))!;
+    expect(c.display, '०९ लक्ष निवास १८३८');
+    expect(c.formattedPlusCode, '7MV7P88F+VJC');
+    expect(c.latitude, closeTo(27.7172, 0.01));
+    expect(c.longitude, closeTo(85.3240, 0.01));
+    expect(c.kid, '092942121838');
+  });
+
+  test('kid accepts devanagari digits', () async {
+    final c = (await repo.resolve('०९२९४२१२१८३८'))!;
+    expect(c.kid, '092942121838');
+  });
+
+  test('kid via explicit method', () async {
+    final c = (await repo.katahoCodeForKid('092942121838'))!;
+    expect(c.formattedPlusCode, '7MV7P88F+VJC');
+  });
+
+  test('all four representations round trip', () async {
+    final seeds = [
+      '7MV7P88F+VJC',
+      '०९ लक्ष निवास १८३८',
+      '092942121838',
+      '27.7172, 85.3240',
+    ];
+    for (final seed in seeds) {
+      final c = (await repo.resolve(seed))!;
+      expect(c.formattedPlusCode, '7MV7P88F+VJC', reason: seed);
+      expect(c.display, '०९ लक्ष निवास १८३८', reason: seed);
+      expect(c.kid, '092942121838', reason: seed);
+      expect(c.latitude, closeTo(27.7172, 0.01), reason: seed);
+    }
+  });
+
+  test('malformed kid returns null', () async {
+    expect(await repo.resolve('99999999999999'), isNull); // wrong length
+    expect(await repo.katahoCodeForKid('09294212183'), isNull); // 11 digits
+    expect(await repo.katahoCodeForKid('099999991838'), isNull); // unmapped
+    expect(await repo.katahoCodeForKid('abcdefghijkl'), isNull);
   });
 
   test('unmapped and malformed input returns null', () async {

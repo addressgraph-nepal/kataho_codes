@@ -12,5 +12,6 @@ export 'src/open_location_code.dart';
 export 'src/models/geocode_number.dart';
 export 'src/models/geocode_number_suffix.dart';
 export 'src/models/geocode_word.dart';
+export 'src/models/geocode_word_kid.dart';
 export 'src/models/kataho_code.dart';
 export 'src/presentation/kataho_code_builder.dart';

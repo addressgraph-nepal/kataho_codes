@@ -3,6 +3,7 @@ import 'package:kataho_code/src/geocode_cipher.dart';
 import 'package:kataho_code/src/models/geocode_number.dart';
 import 'package:kataho_code/src/models/geocode_number_suffix.dart';
 import 'package:kataho_code/src/models/geocode_word.dart';
+import 'package:kataho_code/src/models/geocode_word_kid.dart';
 import 'package:kataho_code/src/models/kataho_code.dart';
 import 'package:kataho_code/src/open_location_code.dart';
 
@@ -20,6 +21,8 @@ class GeocodeRepository {
       'packages/kataho_code/assets/data/geocode_words.json.enc';
   static const _suffixesAsset =
       'packages/kataho_code/assets/data/geocode_number_suffixes.json.enc';
+  static const _wordKidsAsset =
+      'packages/kataho_code/assets/data/geocode_word_kids.json.enc';
 
   /// Number of characters in the region segment.
   static const int numberCodeLength = 4;
@@ -34,13 +37,23 @@ class GeocodeRepository {
   static const int fullCodeLength =
       numberCodeLength + wordCodeLength + suffixCodeLength;
 
+  /// Number of digits each half of the word segment contributes to a KID.
+  static const int wordKidLength = 3;
+
+  /// Number of digits in a full KID: 2 region + 3 + 3 word + 4 suffix.
+  static const int kidLength = 12;
+
   List<GeocodeNumber>? _numbers;
   List<GeocodeWord>? _words;
   List<GeocodeNumberSuffix>? _suffixes;
+  List<GeocodeWordKid>? _wordKids;
 
   Map<String, GeocodeNumber>? _numbersByCode;
   Map<String, GeocodeWord>? _wordsByCode;
   Map<String, GeocodeNumberSuffix>? _suffixesByCode;
+
+  Map<String, GeocodeWordKid>? _wordKidsByCode;
+  Map<String, GeocodeWordKid>? _wordKidsByKid;
 
   Map<String, GeocodeNumber>? _numbersByName;
   Map<String, GeocodeWord>? _wordsByName;
@@ -68,9 +81,17 @@ class GeocodeRepository {
         GeocodeNumberSuffix.fromJson,
       );
 
-  /// Loads all three datasets before returning.
+  /// Returns the word-KID dataset, loading and caching it on first use.
+  Future<List<GeocodeWordKid>> wordKids() async =>
+      _wordKids ??= await _loadMap(
+        _wordKidsAsset,
+        'geocode_word_kids',
+        (plusCode, kid) => GeocodeWordKid(plusCode: plusCode, kid: kid),
+      );
+
+  /// Loads all four datasets before returning.
   Future<void> preload() async {
-    await Future.wait([numbers(), words(), suffixes()]);
+    await Future.wait([numbers(), words(), suffixes(), wordKids()]);
   }
 
   /// Finds a region number by its Plus Code segment.
@@ -127,7 +148,7 @@ class GeocodeRepository {
       hints: [...firstWord.hints, ...secondWord.hints],
     );
 
-    return _withCoordinates(
+    return _complete(
       number: number,
       word: word,
       suffix: suffix,
@@ -220,7 +241,7 @@ class GeocodeRepository {
         hints: [...first.hints, ...second.hints],
       );
 
-      return _withCoordinates(
+      return _complete(
         number: number,
         word: word,
         suffix: suffix,
@@ -240,12 +261,20 @@ class GeocodeRepository {
   /// representation — Kataho display form, Plus Code, and coordinates.
   ///
   /// [input] may be a Plus Code (`"7MV7P8CF+J68"`), a Kataho code
-  /// (`"०९ लक्ष निवास १८३८"`), or a `"latitude,longitude"` pair
-  /// (`"27.7172,85.3240"`). Returns `null` when the input is unrecognised or
-  /// has no mapping.
+  /// (`"०९ लक्ष निवास १८३८"`), a KID (`"192451960075"`), or a
+  /// `"latitude,longitude"` pair (`"27.7172,85.3240"`). Returns `null` when
+  /// the input is unrecognised or has no mapping.
   Future<KatahoCode?> resolve(String input) async {
     final trimmed = input.trim();
     if (trimmed.isEmpty) return null;
+
+    // A KID is exactly 12 digits with no separators, so it cannot be confused
+    // with a coordinate pair (which needs a comma or space) or a Kataho code
+    // (which contains words).
+    final digits = _foldName(trimmed);
+    if (digits.length == kidLength && RegExp(r'^[0-9]+$').hasMatch(digits)) {
+      return katahoCodeForKid(digits);
+    }
 
     final latLng = _parseLatLng(trimmed);
     if (latLng != null) {
@@ -295,14 +324,24 @@ class GeocodeRepository {
     return buffer.toString();
   }
 
-  /// Builds a [KatahoCode] with the coordinates its plus code decodes to.
-  static KatahoCode _withCoordinates({
+  /// Builds a [KatahoCode] carrying every representation: the coordinates its
+  /// plus code decodes to, and its KID.
+  Future<KatahoCode> _complete({
     required GeocodeNumber number,
     required GeocodeWord word,
     required GeocodeNumberSuffix suffix,
     required String plusCode,
-  }) {
+  }) async {
     final area = plusCodeToArea(plusCode);
+    final partial = KatahoCode(
+      number: number,
+      word: word,
+      suffix: suffix,
+      plusCode: plusCode,
+      latitude: area?.latitude,
+      longitude: area?.longitude,
+    );
+
     return KatahoCode(
       number: number,
       word: word,
@@ -310,6 +349,85 @@ class GeocodeRepository {
       plusCode: plusCode,
       latitude: area?.latitude,
       longitude: area?.longitude,
+      kid: await kidForKatahoCode(partial),
+    );
+  }
+
+  /// Finds a word-KID mapping by its two-character Plus Code segment.
+  Future<GeocodeWordKid?> wordKidForCode(String code) async {
+    _wordKidsByCode ??= {for (final e in await wordKids()) e.plusCode: e};
+    return _wordKidsByCode![code.toUpperCase()];
+  }
+
+  /// Finds a word-KID mapping by its 3-digit group.
+  Future<GeocodeWordKid?> wordKidForKid(String kid) async {
+    _wordKidsByKid ??= {for (final e in await wordKids()) e.kid: e};
+    return _wordKidsByKid![kid];
+  }
+
+  /// Builds the 12-digit KID for [code].
+  ///
+  /// The KID is the region number, the two 3-digit groups the halves of the
+  /// word segment map to, and the house number, concatenated with no
+  /// separators — e.g. `"192451960075"`. Returns `null` when either half of
+  /// the word segment is unmapped.
+  Future<String?> kidForKatahoCode(KatahoCode code) async {
+    final wordCode = code.word.plusCode;
+    if (wordCode.length != wordCodeLength) return null;
+
+    final halves = await Future.wait([
+      wordKidForCode(wordCode.substring(0, 2)),
+      wordKidForCode(wordCode.substring(2)),
+    ]);
+    final first = halves[0];
+    final second = halves[1];
+    if (first == null || second == null) return null;
+
+    return '${code.number.number}${first.kid}${second.kid}'
+        '${code.suffix.numbers}';
+  }
+
+  /// Resolves a 12-digit [kid] back to a Kataho code.
+  ///
+  /// The KID is fixed-width — 2 region digits, two 3-digit word groups, and 4
+  /// house-number digits — so it parses without separators. Devanagari digits
+  /// are accepted. Returns `null` when [kid] is malformed or unmapped.
+  Future<KatahoCode?> katahoCodeForKid(String kid) async {
+    final digits = _foldName(kid).replaceAll(RegExp(r'[\s-]'), '');
+    if (digits.length != kidLength) return null;
+    if (!RegExp(r'^[0-9]+$').hasMatch(digits)) return null;
+
+    final numberDigits = digits.substring(0, 2);
+    final firstKid = digits.substring(2, 2 + wordKidLength);
+    final secondKid = digits.substring(
+      2 + wordKidLength,
+      2 + wordKidLength * 2,
+    );
+    final suffixDigits = digits.substring(2 + wordKidLength * 2);
+
+    final wordHalves = await Future.wait([
+      wordKidForKid(firstKid),
+      wordKidForKid(secondKid),
+    ]);
+    final firstHalf = wordHalves[0];
+    final secondHalf = wordHalves[1];
+    if (firstHalf == null || secondHalf == null) return null;
+
+    // Rebuild the plus code from the mapped segments, then reuse the forward
+    // lookup so the result is identical to resolving that code directly.
+    final results = await Future.wait([
+      numberForName(numberDigits),
+      suffixForName(suffixDigits),
+    ]);
+    final number = results[0] as GeocodeNumber?;
+    final suffix = results[1] as GeocodeNumberSuffix?;
+    if (number == null || suffix == null) return null;
+
+    return katahoCodeFor(
+      number.plusCode +
+          firstHalf.plusCode +
+          secondHalf.plusCode +
+          suffix.codes,
     );
   }
 
@@ -318,6 +436,30 @@ class GeocodeRepository {
   static String normalisePlusCode(String value) {
     final normalised = value.replaceAll(RegExp(r'[+\s-]'), '').toUpperCase();
     return normalised;
+  }
+
+  /// Loads an asset whose payload is a JSON object of `code: value` pairs,
+  /// rather than the array the other datasets use.
+  Future<List<T>> _loadMap<T>(
+    String asset,
+    String key,
+    T Function(String, String) fromEntry,
+  ) async {
+    await _cipher.init();
+
+    final bytes = await rootBundle.load(asset);
+    final json = _cipher.decryptJson(
+      bytes.buffer.asUint8List(bytes.offsetInBytes, bytes.lengthInBytes),
+    );
+
+    final map = json[key];
+    if (map is! Map) {
+      throw FormatException('Asset $asset is missing the "$key" object.');
+    }
+
+    return List<T>.unmodifiable(
+      map.entries.map((e) => fromEntry(e.key as String, e.value as String)),
+    );
   }
 
   Future<List<T>> _load<T>(

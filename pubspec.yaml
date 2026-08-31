@@ -1,6 +1,6 @@
 name: kataho_code
-description: Convert between coordinates, Nepal Plus Codes, and human-readable Kataho Codes.
-version: 0.2.0
+description: Convert between coordinates, Nepal Plus Codes, Kataho Codes, and KIDs.
+version: 0.3.0
 repository: https://github.com/addressgraph-nepal/kataho_codes
 homepage: https://github.com/addressgraph-nepal/kataho_codes
 issue_tracker: https://github.com/addressgraph-nepal/kataho_codes/issues
@@ -25,3 +25,4 @@ flutter:
     - assets/data/nepal_geocode.json.enc
     - assets/data/geocode_words.json.enc
     - assets/data/geocode_number_suffixes.json.enc
+    - assets/data/geocode_word_kids.json.enc

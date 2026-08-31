@@ -1,3 +1,22 @@
+## 0.3.0
+
+Added the KID — a 12-digit, separator-free form of a Kataho Code. Coordinates,
+Plus Codes, Kataho Codes, and KIDs now all convert to each other.
+
+* Added the `geocode_word_kids` dataset, mapping each 2-character Plus Code
+  word segment to a 3-digit group. A KID is the region number (2), both word
+  halves (3 + 3), and the house number (4): `7MW4JQF6+62R` ->
+  `192451960075`.
+* Added `katahoCodeForKid` and `kidForKatahoCode`, plus the `wordKidForCode`
+  and `wordKidForKid` dataset lookups.
+* `GeocodeRepository.resolve` now also detects a KID, so any of the four
+  representations resolves through the same call.
+* `KatahoCode` carries `kid` alongside `plusCode`, `latitude`, and
+  `longitude`.
+* `KatahoCodeBuilder` accepts a `kid` argument.
+* Added `tool/encrypt_word_kids.dart`, which encrypts the KID dataset with the
+  existing key instead of rotating it the way `encrypt_assets.dart` would.
+
 ## 0.2.0
 
 Conversion is now bidirectional: coordinates, Plus Codes, and Kataho Codes all

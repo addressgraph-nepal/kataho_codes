@@ -8,17 +8,17 @@ import 'package:kataho_code/src/open_location_code.dart';
 
 /// Builds a widget from the asynchronous result of a Kataho Code lookup.
 class KatahoCodeBuilder extends StatelessWidget {
-  /// Creates a builder that resolves a Plus Code, a Kataho code, or
+  /// Creates a builder that resolves a Plus Code, a Kataho code, a KID, or
   /// coordinates using [authKey].
   ///
-  /// Provide exactly one input: [plusCode], [katahoCode], [input], or both
-  /// [latitude] and [longitude]. Whichever is given is resolved to the same
-  /// [KatahoCode], which carries the Plus Code and coordinates alongside the
-  /// Kataho display form.
+  /// Provide exactly one input: [plusCode], [katahoCode], [kid], [input], or
+  /// both [latitude] and [longitude]. Whichever is given is resolved to the
+  /// same [KatahoCode], which carries all four representations.
   const KatahoCodeBuilder({
     super.key,
     this.plusCode,
     this.katahoCode,
+    this.kid,
     this.input,
     this.latitude,
     this.longitude,
@@ -28,10 +28,11 @@ class KatahoCodeBuilder extends StatelessWidget {
   }) : assert(
          (plusCode != null ? 1 : 0) +
                  (katahoCode != null ? 1 : 0) +
+                 (kid != null ? 1 : 0) +
                  (input != null ? 1 : 0) +
                  (latitude != null && longitude != null ? 1 : 0) ==
              1,
-         'Provide exactly one of plusCode, katahoCode, input, or '
+         'Provide exactly one of plusCode, katahoCode, kid, input, or '
          'latitude+longitude.',
        ),
        assert(
@@ -45,7 +46,11 @@ class KatahoCodeBuilder extends StatelessWidget {
   /// Kataho code to resolve, e.g. `"०९ लक्ष निवास १८३८"`.
   final String? katahoCode;
 
-  /// Any supported input — a Plus Code, a Kataho code, or `"lat,lng"`. Use
+  /// KID to resolve — 12 digits, e.g. `"192451960075"`.
+  final String? kid;
+
+  /// Any supported input — a Plus Code, a Kataho code, a KID, or `"lat,lng"`.
+  /// Use
   /// this when the input type is not known ahead of time, such as a value
   /// typed by the user.
   final String? input;
@@ -70,6 +75,7 @@ class KatahoCodeBuilder extends StatelessWidget {
     final resolvedInput =
         plusCode ??
         katahoCode ??
+        kid ??
         input ??
         plusCodeFromLatLng(latitude!, longitude!);
 

@@ -1,14 +1,16 @@
 # kataho_code
 
 Flutter package for converting between coordinates, Nepal-focused 11-character
-Plus Codes, and human-readable Kataho Codes — in any direction.
+Plus Codes, human-readable Kataho Codes, and KIDs — in any direction.
 
 ```
-latitude/longitude  <-->  Plus Code  <-->  Kataho Code
-   27.7172, 85.3240        7MV7P8CF+J68     ०९ लक्ष निवास १८३८
+latitude/longitude   27.7172, 85.3240
+Plus Code            7MW4JQF6+62R
+Kataho Code          १९ माणिक प्रकाश ००७५
+KID                  192451960075
 ```
 
-Give the package any one of the three and it returns all of them. It includes
+Give the package any one of the four and it returns all of them. It includes
 encrypted geocode datasets, model classes, an async repository, a
 `KatahoCodeCubit`, and a ready-to-use `KatahoCodeBuilder`.
 
@@ -16,7 +18,7 @@ encrypted geocode datasets, model classes, an async repository, a
 
 ```yaml
 dependencies:
-  kataho_code: ^0.2.0
+  kataho_code: ^0.3.0
 ```
 
 Then run `flutter pub get`.
@@ -58,9 +60,17 @@ KatahoCodeBuilder(
 
 // From a Kataho Code
 KatahoCodeBuilder(
-  katahoCode: '०९ लक्ष निवास १८३८',
+  katahoCode: '१९ माणिक प्रकाश ००७५',
   authKey: const String.fromEnvironment('KATAHO_AUTH_KEY'),
   builder: (context, code) => Text('${code.latitude}, ${code.longitude}'),
+  placeholder: const Text('Loading...'),
+)
+
+// From a KID
+KatahoCodeBuilder(
+  kid: '192451960075',
+  authKey: const String.fromEnvironment('KATAHO_AUTH_KEY'),
+  builder: (context, code) => Text(code.display),
   placeholder: const Text('Loading...'),
 )
 
@@ -73,22 +83,23 @@ KatahoCodeBuilder(
 )
 ```
 
-Provide exactly one of `plusCode`, `katahoCode`, `input`, or
+Provide exactly one of `plusCode`, `katahoCode`, `kid`, `input`, or
 `latitude` + `longitude`.
 
 ## The result
 
-Every lookup returns a `KatahoCode` carrying all three representations, so one
+Every lookup returns a `KatahoCode` carrying all four representations, so one
 conversion covers every direction:
 
 ```dart
-code.display           // '०९ लक्ष निवास १८३८'  Devanagari
-code.displayLatin      // '09 लक्ष निवास 1838'  Western digits
-code.plusCode          // '7MV7P8CFJ68'         normalised
-code.formattedPlusCode // '7MV7P8CF+J68'        canonical
+code.display           // '१९ माणिक प्रकाश ००७५'  Devanagari
+code.displayLatin      // '19 माणिक प्रकाश 0075'  Western digits
+code.plusCode          // '7MW4JQF662R'          normalised
+code.formattedPlusCode // '7MW4JQF6+62R'         canonical
+code.kid               // '192451960075'
 code.latitude          // 27.7172
 code.longitude         // 85.3240
-code.segmentedPlusCode // '7MV7-P8CF-J68'       for debugging
+code.segmentedPlusCode // '7MW4-JQF6-62R'        for debugging
 ```
 
 `latitude` and `longitude` are the centre of the area the Plus Code names — an
@@ -104,17 +115,19 @@ final repository = GeocodeRepository(
   authKey: const String.fromEnvironment('KATAHO_AUTH_KEY'),
 );
 
-await repository.resolve('7MV7P8CF+J68');       // Plus Code
-await repository.resolve('०९ लक्ष निवास १८३८');  // Kataho Code
-await repository.resolve('27.7172, 85.3240');   // coordinates
+await repository.resolve('7MW4JQF6+62R');        // Plus Code
+await repository.resolve('१९ माणिक प्रकाश ००७५');  // Kataho Code
+await repository.resolve('192451960075');        // KID
+await repository.resolve('27.7172, 85.3240');    // coordinates
 ```
 
 Or call a direction explicitly:
 
 ```dart
-await repository.katahoCodeFor('7MV7P8CF+J68');
+await repository.katahoCodeFor('7MW4JQF6+62R');
 await repository.katahoCodeForLatLng(27.7172, 85.3240);
-await repository.katahoCodeForDisplay('०९ लक्ष निवास १८३८');
+await repository.katahoCodeForDisplay('१९ माणिक प्रकाश ००७५');
+await repository.katahoCodeForKid('192451960075');
 ```
 
 Every one returns the same `KatahoCode?`, `null` when the input is
@@ -147,6 +160,19 @@ case. The repository normalises them and expects 11 significant characters.
 Western (`09`), house numbers may be unpadded (`0` for `0000`), and each
 segment also matches the `hints` recorded in the datasets, so a romanised
 `9 laxya niwas 1838` resolves too.
+
+**KIDs** are exactly 12 digits with no separators, in Devanagari or Western
+script. The layout is fixed-width, so it parses unambiguously:
+
+```
+19   245   196   0075
+└ region    └ word halves   └ house number
+     JQ->245  F6->196
+```
+
+The two 3-digit word groups come from splitting the 4-character word segment
+of the Plus Code (`JQF6` -> `JQ` + `F6`) and mapping each half through
+`geocode_word_kids`.
 
 **Coordinates** are accepted as `"lat,lng"` or `"lat lng"`.
 
