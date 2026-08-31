@@ -11,7 +11,7 @@ class _FakeRepository implements GeocodeRepository {
   int calls = 0;
 
   @override
-  Future<KatahoCode?> katahoCodeFor(String plusCode) async {
+  Future<KatahoCode?> resolve(String input) async {
     calls++;
     if (error != null) throw error!;
     return result;

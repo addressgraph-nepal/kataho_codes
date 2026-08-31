@@ -4,20 +4,57 @@ import 'package:kataho_code/src/application/kataho_code_cubit.dart';
 import 'package:kataho_code/src/application/kataho_code_state.dart';
 import 'package:kataho_code/src/geocode_repository.dart';
 import 'package:kataho_code/src/models/kataho_code.dart';
+import 'package:kataho_code/src/open_location_code.dart';
 
 /// Builds a widget from the asynchronous result of a Kataho Code lookup.
 class KatahoCodeBuilder extends StatelessWidget {
-  /// Creates a builder that resolves [plusCode] using [authKey].
+  /// Creates a builder that resolves a Plus Code, a Kataho code, or
+  /// coordinates using [authKey].
+  ///
+  /// Provide exactly one input: [plusCode], [katahoCode], [input], or both
+  /// [latitude] and [longitude]. Whichever is given is resolved to the same
+  /// [KatahoCode], which carries the Plus Code and coordinates alongside the
+  /// Kataho display form.
   const KatahoCodeBuilder({
     super.key,
-    required this.plusCode,
+    this.plusCode,
+    this.katahoCode,
+    this.input,
+    this.latitude,
+    this.longitude,
     required this.authKey,
     required this.builder,
     required this.placeholder,
-  });
+  }) : assert(
+         (plusCode != null ? 1 : 0) +
+                 (katahoCode != null ? 1 : 0) +
+                 (input != null ? 1 : 0) +
+                 (latitude != null && longitude != null ? 1 : 0) ==
+             1,
+         'Provide exactly one of plusCode, katahoCode, input, or '
+         'latitude+longitude.',
+       ),
+       assert(
+         (latitude == null) == (longitude == null),
+         'Provide both latitude and longitude, or neither.',
+       );
 
   /// Plus Code to resolve, with or without separators.
-  final String plusCode;
+  final String? plusCode;
+
+  /// Kataho code to resolve, e.g. `"०९ लक्ष निवास १८३८"`.
+  final String? katahoCode;
+
+  /// Any supported input — a Plus Code, a Kataho code, or `"lat,lng"`. Use
+  /// this when the input type is not known ahead of time, such as a value
+  /// typed by the user.
+  final String? input;
+
+  /// Latitude in decimal degrees. Must be supplied with [longitude].
+  final double? latitude;
+
+  /// Longitude in decimal degrees. Must be supplied with [latitude].
+  final double? longitude;
 
   /// Base64-encoded key used to decrypt the package datasets.
   final String authKey;
@@ -30,12 +67,18 @@ class KatahoCodeBuilder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final resolvedInput =
+        plusCode ??
+        katahoCode ??
+        input ??
+        plusCodeFromLatLng(latitude!, longitude!);
+
     return BlocProvider<KatahoCodeCubit>(
       create: (_) =>
           KatahoCodeCubit(repository: GeocodeRepository(authKey: authKey))
-            ..resolve(plusCode),
+            ..resolve(resolvedInput),
       child: _KatahoCodeView(
-        plusCode: plusCode,
+        input: resolvedInput,
         builder: builder,
         placeholder: placeholder,
       ),
@@ -45,12 +88,12 @@ class KatahoCodeBuilder extends StatelessWidget {
 
 class _KatahoCodeView extends StatefulWidget {
   const _KatahoCodeView({
-    required this.plusCode,
+    required this.input,
     required this.builder,
     required this.placeholder,
   });
 
-  final String plusCode;
+  final String input;
   final Widget Function(BuildContext context, KatahoCode code) builder;
   final Widget placeholder;
 
@@ -62,8 +105,8 @@ class _KatahoCodeViewState extends State<_KatahoCodeView> {
   @override
   void didUpdateWidget(_KatahoCodeView oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.plusCode != widget.plusCode) {
-      context.read<KatahoCodeCubit>().resolve(widget.plusCode);
+    if (oldWidget.input != widget.input) {
+      context.read<KatahoCodeCubit>().resolve(widget.input);
     }
   }
 
@@ -79,8 +122,8 @@ class _KatahoCodeViewState extends State<_KatahoCodeView> {
           return widget.builder(context, code);
         }
 
-        if (state case KatahoCodeUnavailable(:final plusCode)) {
-          debugPrint('[KATAHO CODE] no mapping for plusCode: $plusCode');
+        if (state case KatahoCodeUnavailable(:final input)) {
+          debugPrint('[KATAHO CODE] no mapping for input: $input');
           return const Text('Kataho code unavailable');
         }
 

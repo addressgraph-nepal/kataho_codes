@@ -22,6 +22,8 @@ class KatahoCode extends Equatable {
     required this.word,
     required this.suffix,
     required this.plusCode,
+    this.latitude,
+    this.longitude,
   });
 
   /// Leading region segment, e.g. `01`.
@@ -36,6 +38,23 @@ class KatahoCode extends Equatable {
   /// The normalised 11-character plus code this was derived from,
   /// without separators, e.g. `"7MV7P8CFJ68"`.
   final String plusCode;
+
+  /// Latitude of the centre of the area [plusCode] names, in decimal degrees.
+  ///
+  /// Populated for every code the repository resolves. It is `null` only when
+  /// a [KatahoCode] is constructed directly without coordinates.
+  final double? latitude;
+
+  /// Longitude of the centre of the area [plusCode] names, in decimal degrees.
+  ///
+  /// Populated for every code the repository resolves. It is `null` only when
+  /// a [KatahoCode] is constructed directly without coordinates.
+  final double? longitude;
+
+  /// The plus code in its canonical separated form, e.g. `"7MV7P8CF+J68"`.
+  String get formattedPlusCode => plusCode.length > 8
+      ? '${plusCode.substring(0, 8)}+${plusCode.substring(8)}'
+      : plusCode;
 
   /// Devanagari form shown on the plate, e.g. `"०१ अखण्ड ००००"`.
   ///
@@ -68,7 +87,14 @@ class KatahoCode extends Equatable {
   }
 
   @override
-  List<Object?> get props => [number, word, suffix, plusCode];
+  List<Object?> get props => [
+    number,
+    word,
+    suffix,
+    plusCode,
+    latitude,
+    longitude,
+  ];
 
   @override
   String toString() => 'KatahoCode($display, plusCode: $plusCode)';

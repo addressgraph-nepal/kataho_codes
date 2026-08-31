@@ -18,27 +18,149 @@ class KatahoExampleApp extends StatelessWidget {
   }
 }
 
-class KatahoExamplePage extends StatelessWidget {
+class KatahoExamplePage extends StatefulWidget {
   const KatahoExamplePage({super.key});
 
   @override
+  State<KatahoExamplePage> createState() => _KatahoExamplePageState();
+}
+
+class _KatahoExamplePageState extends State<KatahoExamplePage> {
+  static const _authKey = String.fromEnvironment('KATAHO_AUTH_KEY');
+
+  final _controller = TextEditingController(text: '27.7172, 85.3240');
+  String? _input;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final value = _controller.text.trim();
+    if (value.isEmpty) return;
+    setState(() => _input = value);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    const latitude = 27.7172;
-    const longitude = 85.3240;
-    final plusCode = plusCodeFromLatLng(latitude, longitude);
+    final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Kataho Code example')),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Text(
-            'Plus Code for Kathmandu:\n$plusCode\n\n'
-            'To resolve a Kataho Code, provide your dataset key to '
-            'KatahoCodeBuilder or GeocodeRepository.',
-            textAlign: TextAlign.center,
-          ),
+      body: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'Enter coordinates, a Plus Code, or a Kataho Code — the package '
+              'detects which and converts between all three.',
+              style: theme.textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _controller,
+              onSubmitted: (_) => _submit(),
+              decoration: const InputDecoration(
+                labelText: 'Coordinates, Plus Code, or Kataho Code',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              children: [
+                for (final sample in const [
+                  '27.7172, 85.3240',
+                  '7MV7P8CF+J68',
+                  '०९ लक्ष निवास १८३८',
+                ])
+                  ActionChip(
+                    label: Text(sample),
+                    onPressed: () {
+                      _controller.text = sample;
+                      _submit();
+                    },
+                  ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            FilledButton(onPressed: _submit, child: const Text('Convert')),
+            if (_input != null) ...[
+              const SizedBox(height: 24),
+              KatahoCodeBuilder(
+                input: _input,
+                authKey: _authKey,
+                placeholder: const Center(child: CircularProgressIndicator()),
+                builder: (context, code) => _ResultCard(code: code),
+              ),
+            ],
+          ],
         ),
+      ),
+    );
+  }
+}
+
+class _ResultCard extends StatelessWidget {
+  const _ResultCard({required this.code});
+
+  final KatahoCode code;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Kataho Code', style: theme.textTheme.labelMedium),
+            Text(code.display, style: theme.textTheme.headlineSmall),
+            const Divider(height: 24),
+            _Row(label: 'Latin', value: code.displayLatin),
+            _Row(label: 'Plus Code', value: code.formattedPlusCode),
+            if (code.latitude != null && code.longitude != null)
+              _Row(
+                label: 'Coordinates',
+                value:
+                    '${code.latitude!.toStringAsFixed(6)}, '
+                    '${code.longitude!.toStringAsFixed(6)}',
+              ),
+            _Row(label: 'Segments', value: code.segmentedPlusCode),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _Row extends StatelessWidget {
+  const _Row({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 110,
+            child: Text(label, style: theme.textTheme.labelMedium),
+          ),
+          Expanded(
+            child: SelectableText(value, style: theme.textTheme.bodyMedium),
+          ),
+        ],
       ),
     );
   }

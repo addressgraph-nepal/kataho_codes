@@ -29,16 +29,18 @@ class KatahoCodeSuccess extends KatahoCodeState {
   List<Object?> get props => [code];
 }
 
-/// The plus code is well-formed but has no Kataho equivalent, e.g. it points
+/// The input is well-formed but has no Kataho equivalent, e.g. it points
 /// outside the mapped area. Distinct from [KatahoCodeFailure]: nothing went
 /// wrong, there is simply no code to show.
 class KatahoCodeUnavailable extends KatahoCodeState {
-  const KatahoCodeUnavailable(this.plusCode);
+  const KatahoCodeUnavailable(this.input);
 
-  final String plusCode;
+  /// The input that could not be resolved — a Plus Code, a Kataho code, or a
+  /// coordinate pair.
+  final String input;
 
   @override
-  List<Object?> get props => [plusCode];
+  List<Object?> get props => [input];
 }
 
 /// The lookup itself failed — decryption error, missing asset, bad key.

@@ -1,6 +1,6 @@
 name: kataho_code
-description: Convert Nepal Plus Codes into human-readable Kataho Codes.
-version: 0.1.1
+description: Convert between coordinates, Nepal Plus Codes, and human-readable Kataho Codes.
+version: 0.2.0
 repository: https://github.com/addressgraph-nepal/kataho_codes
 homepage: https://github.com/addressgraph-nepal/kataho_codes
 issue_tracker: https://github.com/addressgraph-nepal/kataho_codes/issues
